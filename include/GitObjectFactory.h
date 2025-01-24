@@ -14,17 +14,15 @@ public:
 
 class BlobFactory : public GitObjectFactory {
 private:
-  std::unique_ptr<GitObject> CreateObject() { return std::make_unique<blob>(); }
+  std::unique_ptr<GitObject> CreateObject() override;
 };
 
 class CommitFactory : public GitObjectFactory {
 private:
-  std::unique_ptr<GitObject> CreateObject() {
-    return std::make_unique<commit>();
-  }
+  std::unique_ptr<GitObject> CreateObject() override;
 };
 
 class TreeFactory : public GitObjectFactory {
 private:
-  std::unique_ptr<GitObject> CreateObject() { return std::make_unique<tree>(); }
+  std::unique_ptr<GitObject> CreateObject() override;
 };
