@@ -5,6 +5,7 @@ class GitObject {
 protected:
   std::string hash;
   std::string type;
+  GitObject() = default;
 
 public:
   ~GitObject() = default;

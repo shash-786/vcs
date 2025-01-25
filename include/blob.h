@@ -4,6 +4,6 @@
 
 class blob : public GitObject {
 public:
-  std::string GetContent();
-  std::string GetHash();
+  std::string getContent();
+  std::string getHash();
 };

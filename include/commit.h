@@ -8,6 +8,6 @@ public:
   tree *t;
   commit *parent;
 
-  std::string GetContent();
-  std::string GetHash();
+  std::string getContent();
+  std::string getHash();
 };

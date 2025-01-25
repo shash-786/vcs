@@ -4,6 +4,6 @@
 
 class tree : public GitObject {
 public:
-  std::string GetContent() { return ""; }
-  std::string GetHash() { return ""; }
+  std::string getContent();
+  std::string getHash();
 };
