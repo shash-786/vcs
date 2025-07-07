@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <variant>
+
 template <typename T, typename E> class Result {
 private:
   std::variant<T, E> data;
@@ -16,14 +17,14 @@ public:
 
   E error() {
     if (success()) {
-      std::runtime_error("Accessing error from a Success result");
+      throw std::runtime_error("Accessing error from a Success result");
     }
     return std::get<E>(data);
   }
 
   T value() {
     if (err_present()) {
-      std::runtime_error("Accessing value from a Error result");
+      throw std::runtime_error("Accessing value from a Error result");
     }
     return std::get<T>(data);
   }

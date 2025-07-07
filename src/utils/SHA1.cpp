@@ -1,4 +1,6 @@
-#include "../../include/types.h"
+#include "../../common/errors.h"
+#include "../../common/result.h"
+#include "../../include/core/types.h"
 #include <cstdio>
 #include <iomanip>
 #include <istream>
@@ -16,19 +18,19 @@ std::string hash_to_hex(unsigned char hash[]) {
   return ss.str();
 }
 
-std::string compute_sha1(const char *metadata, int m_len, const char *content,
-                         int c_len) {
+Result<std::string, errorcode> compute_sha1(const char *metadata, int m_len,
+                                            const char *content, int c_len) {
   EVP_MD_CTX *ctx = EVP_MD_CTX_create();
   if (!ctx) {
     fprintf(stderr, "error in creating envolope context");
-    return "";
+    return errorcode::InternalError;
   }
 
   const EVP_MD *sha_obj = EVP_sha1();
   if (!sha_obj) {
     EVP_MD_CTX_free(ctx);
     fprintf(stderr, "error in creating sha1 context");
-    return "";
+    return errorcode::InternalError;
   }
 
   EVP_DigestInit_ex(ctx, sha_obj, nullptr);
@@ -36,45 +38,46 @@ std::string compute_sha1(const char *metadata, int m_len, const char *content,
   if (EVP_DigestUpdate(ctx, metadata, m_len) != 1) {
     EVP_MD_CTX_free(ctx);
     fprintf(stderr, "error in updating sha1 context - metadata");
-    return "";
+    return errorcode::UpdateError;
   }
 
   if (EVP_DigestUpdate(ctx, content, c_len) != 1) {
     EVP_MD_CTX_free(ctx);
     fprintf(stderr, "error in updating sha1 context - content");
-    return "";
+    return errorcode::UpdateError;
   }
 
   unsigned char hash[SHA_DIGEST_LENGTH];
   if (EVP_DigestFinal_ex(ctx, hash, nullptr) != 1) {
     EVP_MD_CTX_free(ctx);
     fprintf(stderr, "error in finalising hash");
-    return "";
+    return errorcode::InternalError;
   }
 
   EVP_MD_CTX_free(ctx);
   return hash_to_hex(hash);
 }
 
-std::string compute_sha1(const char *metadata, int m_len, std::ifstream &i) {
+Result<std::string, errorcode> compute_sha1(const char *metadata, int m_len,
+                                            std::istream &i) {
   EVP_MD_CTX *ctx = EVP_MD_CTX_create();
   if (!ctx) {
     fprintf(stderr, "error in creating envolope context");
-    return "";
+    return errorcode::InternalError;
   }
 
   const EVP_MD *sha_obj = EVP_sha1();
   if (!sha_obj) {
     EVP_MD_CTX_free(ctx);
     fprintf(stderr, "error in creating sha1 context");
-    return "";
+    return errorcode::InternalError;
   }
   EVP_DigestInit_ex(ctx, sha_obj, nullptr);
 
   if (EVP_DigestUpdate(ctx, metadata, m_len) != 1) {
     EVP_MD_CTX_free(ctx);
     fprintf(stderr, "error in updating the digest context - metadata");
-    return "";
+    return errorcode::UpdateError;
   }
 
   char *buffer = new char[4096];
@@ -83,7 +86,7 @@ std::string compute_sha1(const char *metadata, int m_len, std::ifstream &i) {
       EVP_MD_CTX_free(ctx);
       delete[] buffer;
       fprintf(stderr, "error in updating the digest context - istream");
-      return "";
+      return errorcode::UpdateError;
     }
   }
   delete[] buffer;
@@ -92,7 +95,7 @@ std::string compute_sha1(const char *metadata, int m_len, std::ifstream &i) {
   if (EVP_DigestFinal_ex(ctx, hash, nullptr) != 1) {
     EVP_MD_CTX_free(ctx);
     fprintf(stderr, "error in finalising hash");
-    return "";
+    return errorcode::InternalError;
   }
 
   EVP_MD_CTX_free(ctx);

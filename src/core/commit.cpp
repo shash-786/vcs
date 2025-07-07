@@ -1,5 +1,5 @@
 
-#include "../../include/commit.h"
+#include "../../include/core/commit.h"
 
 std::string commit::getHash() { return ""; }
 

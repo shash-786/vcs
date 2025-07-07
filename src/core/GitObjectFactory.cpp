@@ -4,7 +4,7 @@ Factory Design Pattern
 
 */
 
-#include "../../include/GitObjectFactory.h"
+#include "../../include/core/GitObjectFactory.h"
 #include <memory>
 
 std::unique_ptr<GitObject> BlobFactory::CreateObject() {

@@ -1,4 +1,4 @@
-#include "../../include/blob.h"
+#include "../../include/core/blob.h"
 
 std::string blob::getContent() { return ""; }
 
