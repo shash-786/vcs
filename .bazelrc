@@ -1,0 +1,3 @@
+build --cxxopt="-std=c++23"
+build --cxxopt="-Wall"
+build:debug --cxxopt="-g"
