@@ -31,49 +31,50 @@ Result<std::vector<uint8_t>, errorcode> FS::FSManager::readFile(const std::files
     return bytes ;
 }
 
-int FS::FSManager::writeFile(const std::filesystem::path &path, const std::string &fname, std::span<const uint8_t> bytes)
+bool FS::FSManager::writeFile(const std::filesystem::path &path, const std::string &fname, std::span<const uint8_t> bytes)
 {
     std::filesystem::path complete_path = path / fname ;
     std::ofstream fstrm(complete_path, std::ios::binary) ;
 
     if (!fstrm.is_open()) {
         std::cerr << "Unable to open the stream" << std::endl ;
-        return FAIL ;
+        return false ;
     }
 
     fstrm.write(reinterpret_cast<const char*>(bytes.data()), bytes.size()) ;
 
     if (!fstrm) {
         std::cerr << "Failed to write all data to file: " << complete_path << std::endl;
-        return FAIL;
+        return false ;
     }
     fstrm.close() ;
-    return SUCCESS ;
+    return true ;
 }
 
-int FS::FSManager::removeFile(const std::filesystem::path &inputFile)
+bool FS::FSManager::removeFile(const std::filesystem::path &inputFile)
 {
     if (!isPresent(inputFile)) {
         std::cerr << "Does not exist -->" << inputFile << std::endl;
-        return FAIL ;
+        return false;
     }
 
     if (std::filesystem::is_directory(inputFile)) {
         std::cerr<< "It is a directory." << std::endl ;
-        return FAIL ;
+        return false ;
     }
+
     return std::filesystem::remove(inputFile) ;
 }
   
-int FS::FSManager::removeDirectory(const std::filesystem::path &dirpath)
+bool FS::FSManager::removeDirectory(const std::filesystem::path &dirpath)
 {
     if (!isPresent(dirpath)) {
-        return FAIL ;
+        return false ;
     }
 
     if (std::filesystem::is_regular_file(dirpath)) {
         std::cerr<< "It is a regular file." << std::endl ;
-        return FAIL ;
+        return false ;
     }
     return std::filesystem::remove_all(dirpath) ;
 }

@@ -28,7 +28,7 @@ class ZlibCompressionTestFixture: public ::testing::Test
             fstream << SAMPLE ;
             fstream.close() ;
         } else {
-            std::cerr << "Error: Unable to open file 'example.txt'." << std::endl;
+            throw std::runtime_error("FileStream error") ;
         }
     }
 
