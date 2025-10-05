@@ -2,8 +2,6 @@
 #include <fstream>
 #include <iostream>
 
-#define SUCCESS 0
-#define FAIL 1
 #define CHUNK 0x200000
 
 Result<std::vector<uint8_t>, errorcode> FS::FSManager::readFile(const std::filesystem::path &path)
@@ -83,6 +81,11 @@ bool FS::FSManager::createDirectory(const std::filesystem::path &root, const std
 {
     std::filesystem::path complete_path = root / dname;
     return std::filesystem::create_directory(complete_path);
+}
+
+bool FS::FSManager::createDirectories(const std::filesystem::path &dirs)
+{
+    return std::filesystem::create_directories(dirs) ; 
 }
 
 bool FS::FSManager::isPresent(const std::filesystem::path &inputfile)

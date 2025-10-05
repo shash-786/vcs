@@ -12,6 +12,7 @@ namespace FS
         bool removeFile(const std::filesystem::path &inputFile) override;
         bool removeDirectory(const std::filesystem::path &dirpath) override;
         bool createDirectory(const std::filesystem::path &root, const std::string& dname) override;
+        bool createDirectories(const std::filesystem::path &dirs) override ;
         bool isPresent(const std::filesystem::path &inputfile) override;
         Result<std::filesystem::file_time_type, errorcode> lastModified(const std::filesystem::path &inputfile) override;
         Result<uintmax_t, errorcode> getFilesize(const std::filesystem::path &inputFile) override; 
