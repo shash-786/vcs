@@ -20,11 +20,5 @@ std::optional<errorcode> Command::Init::execute(const std::vector<std::string> &
         std::cerr << ".git/heads cannot be created" ;
         return errorcode::IntitializationError ;
     }
-
-    bool ret = manager.writeFile(repo.getGitPath(), "index", std::vector<uint8_t>()) ;
-    if (!ret) {
-        std::cerr << ".git/index cannot be created" ;
-        return errorcode::IntitializationError ;
-    }
     return {};
 }
