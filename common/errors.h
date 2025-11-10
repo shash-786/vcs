@@ -14,6 +14,8 @@ enum class errorcode {
   ReadError,
   WriteError,
   Cancelled,  // Operation cancelled
+  NotImplementedYet, 
   FailToOpen, // Failed to Open
-  Unknown     // Unknown error
+  Unknown,     // Unknown error
+  NotAllowed, 
 };
