@@ -1,13 +1,14 @@
 #include "Init.h"
 #include <iostream>
 
-std::optional<errorcode> Command::Init::execute(const std::vector<std::string> &args)
+int Command::Init::execute(const std::vector<std::string> &args)
 {
     if (manager.isPresent(repo.getGitPath())) {
         std::cerr << ".git directory already exists\n";
-        return errorcode::AlreadyExists;
+        return 1;
     }
 
+    repo.setRoot(std::filesystem::current_path()) ;
     manager.createDirectory(repo.getRoot(), ".git") ;
     manager.createDirectory(repo.getGitPath(), "objects") ;
     manager.createDirectories(repo.getGitPath() / "refs" / "heads");    
@@ -18,7 +19,8 @@ std::optional<errorcode> Command::Init::execute(const std::vector<std::string> &
     bool ret = manager.writeFile(repo.getGitPath(), "HEAD", bytes) ;
     if (!ret) {
         std::cerr << ".git/heads cannot be created" ;
-        return errorcode::IntitializationError ;
+        return 1 ;
     }
-    return {};
+
+    return 0 ;
 }

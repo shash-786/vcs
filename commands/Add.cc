@@ -1,9 +1,7 @@
 #include "Add.h"
 
-std::optional<errorcode> Command::Add::execute(const std::vector<std::string> &args)
-{
-    // TODO: CONFIGURATION LOAD
-    return std::optional<errorcode>();
+int Command::Add::execute(const std::vector<std::string> &args) {
+    return 0 ;
 }
 
 std::string Command::Add::pathspec(const std::vector<std::string> &args)

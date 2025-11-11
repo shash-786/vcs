@@ -7,7 +7,7 @@ namespace Command
     class Add : public Command 
     {
     public:
-        std::optional<errorcode> execute (const std::vector<std::string>& args) override ;
+        int execute (const std::vector<std::string>& args) override ;
         std::string pathspec(const std::vector<std::string>& args) ;
         Add(FS::FSManager& manager_, Repo::Repository repo_, std::string prefix_) : manager(manager_), repo(repo_), prefix(prefix_) {} 
 
