@@ -97,20 +97,17 @@ int main(int argc, char *argv[])
 
     if (command == "init") {
         c = std::make_unique<Command::Init>(_f, _r) ;
+        return c->execute(sub_args) ;
+    } 
+    
+    auto setup = setup_git_dir(_r) ;
+    if (setup.err_present()) 
+        return EXIT_FAILURE ;
 
-    } else if (command == "add") {
-        
-        auto setup = setup_git_dir(_r) ;
-        if (setup.err_present()) 
-            return EXIT_FAILURE ;
+    if (command == "add") {
         c = std::make_unique<Command::Add>(_f, _r, setup.value()) ;
 
     } else if (command == "rm") {
-
-        auto setup = setup_git_dir(_r) ;
-        if (setup.err_present()) {
-            return EXIT_FAILURE ;
-        }
         // RM COMMAND CALL 
     } else if (command == "commit") {
         // COMMIT COMMAND CALL 

@@ -1,7 +1,7 @@
 #include "Init.h"
 #include <iostream>
 
-int Command::Init::execute(const std::vector<std::string> &args)
+int Command::Init::execute(std::vector<std::string> &args)
 {
     if (manager.isPresent(repo.getGitPath())) {
         std::cerr << ".git directory already exists\n";

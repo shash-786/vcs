@@ -10,6 +10,6 @@ namespace Command
     class Command 
     {
         public:
-        virtual int execute (const std::vector<std::string>& args) = 0;
+        virtual int execute (std::vector<std::string>& args) = 0;
     } ;
 }
