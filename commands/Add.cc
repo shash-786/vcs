@@ -1,15 +1,105 @@
 #include "Add.h"
 #include <algorithm>
 #include <fstream>
-
+#include <dirent.h>
+#include <string.h>
+#include <fnmatch.h>
+#include <sys/stat.h>
 
 void Command::Add::filter_work_tree_files(worktree& w, std::span<const std::string> args) 
 {
-
+    
 }
 
-void Command::Add::_read_work_tree_recursive(worktree& w, const std::string& base) {
+bool excluded (const std::string& suspect, worktree& w) {
 
+    for (int i = 0; i < w.dr->nr; i++) {
+        const directory_ignore_ruleset::entry& entry = w.dr->rules[i] ;
+        const std::string& pattern = entry.rule ;
+        const std::string& base = entry.base ;
+    }
+    return false ;
+}
+
+void dir_add_entry (worktree& w, std::string& name, int len) {
+    worktree_entry new_entry ;
+    new_entry.name = name ;
+    w.files.push_back(std::move(new_entry)) ;
+}
+
+int Command::Add::_read_work_tree_recursive(worktree& w, const std::string& path, const std::string& base) {
+    DIR* dir = opendir(path.c_str()) ;
+    std::string fullname = base ;
+    size_t baselen = fullname.size() ;
+
+    int contents = 0 ;
+    if (dir) {
+        struct dirent* d ;
+        int excludes = push_excludes_from(w, base) ;
+        while ((d = readdir(dir)) != nullptr) {
+
+            auto type = d->d_type ;
+            if (type == DT_UNKNOWN) {
+                struct stat st ;
+                if (lstat(fullname.c_str(), &st) == 0) {
+                    if (S_ISDIR(st.st_mode)) type = DT_DIR ;
+                    else if (S_ISREG(st.st_mode)) type = DT_REG ;
+                    else if (S_ISLNK(st.st_mode)) type = DT_LNK ;
+                }
+            }
+            
+            if (d->d_name[0] == '.' && (d->d_name[1] == '\0' || (d->d_name[1] == '.' && d->d_name[2] == '\0') || strcmp(d->d_name, ".git") == 0) ) {
+                continue ;
+            }
+
+            fullname.resize(baselen) ;
+            fullname.append(d->d_name) ;
+            int de_name_len = strlen(d->d_name) ;
+
+            if (excluded(fullname, w))
+                continue ; 
+
+            switch (type)
+            {
+            // FIXED: Added curly braces to create a specific scope for 'new_base'.
+            // Without braces, 'new_base' is visible to the entire switch block.
+            // If execution jumped to case DT_REG, it would bypass the constructor,
+            // leaving 'new_base' uninitialized. However, the compiler knows the 
+            // destructor must run at the end of the switch. Destroying an 
+            // uninitialized object causes Undefined Behaviour/crashes, so the
+            // compiler forbids it Although it is now being constructed else where 
+            // remember the error
+            case DT_DIR:
+                fullname.push_back('/') ;
+                contents += _read_work_tree_recursive(w, fullname, fullname) ;
+                continue ; 
+            case DT_REG:
+                contents++ ;
+                break ; 
+            case DT_LNK:
+                contents++ ;
+                break ; 
+            default:
+                fprintf(stderr, "only regular files allowed skipping %s", d->d_name) ;
+                continue ;
+            }
+            dir_add_entry(w, fullname, de_name_len) ;
+        }
+        pop_excludes(w, excludes) ;
+    }
+    closedir(dir) ;
+    return contents ;
+}
+
+void Command::Add::pop_excludes(worktree& w, int to_pop) {
+    std::vector<directory_ignore_ruleset::entry>& rules = w.dr->rules ;
+    while (--to_pop) {
+        if (rules.empty()) {
+            fprintf(stderr, "popping more than what was pushed") ;
+            exit(1) ;
+        }
+        w.dr->rules.pop_back() ;
+    }
 }
 
 int Command::Add::push_excludes_from(worktree& w, const std::filesystem::path& wd) {
@@ -42,11 +132,11 @@ int Command::Add::push_excludes_from(worktree& w, const std::filesystem::path& w
     return count ;
 }
 
-void Command::Add::read_work_tree(worktree& w, const std::string& base) {
+void Command::Add::read_work_tree(worktree& w, const std::string& path, const std::string& base) {
     // responsible for crawling down the directory from base
     // and gathering all the files in 'w'
 
-    if (base[0] != '.') {
+    if (base != "") {
         /* 
         common prefix exist **OPTIMISATION** 
         Thanks Linus :)
@@ -82,7 +172,10 @@ void Command::Add::read_work_tree(worktree& w, const std::string& base) {
             push_excludes_from(w, cwd) ;
         }
     }
-    _read_work_tree_recursive(w, base) ;
+    _read_work_tree_recursive(w, path, base) ;
+    std::sort(w.files.begin(), w.files.end(), [](const worktree_entry& a, const worktree_entry& b) {
+        return a.name < b.name ;
+    }) ;
 }
 
 std::string Command::Add::find_common_root(std::span<const std::string> args) 
@@ -119,12 +212,13 @@ std::string Command::Add::find_common_root(std::span<const std::string> args)
 void Command::Add::get_and_filter_work_tree_files(worktree& w, const std::vector<std::string>& args)
 {
     std::string common_prefix = find_common_root(args) ;
-    std::string base = "." ;
+    std::string base = "" ;
+    std::string path = "." ;
     if (common_prefix != "") {
-        base = common_prefix ;
+        path = base = common_prefix ;
     }
 
-    read_work_tree(w, base) ;
+    read_work_tree(w, path, base) ;
     filter_work_tree_files(w, args) ;
 }
 

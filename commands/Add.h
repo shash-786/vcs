@@ -20,11 +20,11 @@ namespace Command
         std::string find_common_root(std::span<const std::string> args) ;
 
         void resolve_paths(std::vector<std::string>& args) ;
+        void pop_excludes(worktree& w, int to_pop) ;
         void get_and_filter_work_tree_files(worktree& w, const std::vector<std::string>& args) ;
         void filter_work_tree_files(worktree& w, std::span<const std::string> args) ;
-        void read_work_tree(worktree& w, const std::string& base) ;
-        void _read_work_tree_recursive(worktree& w, const std::string& base) ;
-
+        void read_work_tree(worktree& w, const std::string& path, const std::string& base) ;
+        int _read_work_tree_recursive(worktree& w, const std::string& path, const std::string& base) ;
         int push_excludes_from(worktree& w, const std::filesystem::path& wd) ;
     };
 };
