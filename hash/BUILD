@@ -27,7 +27,8 @@ cc_library (
 
     deps = [
         ":hash_interface",
-        "@openssl//:ssl", 
+        # "@openssl//:ssl",
+        "@boringssl//:crypto", 
     ], 
 
     visibility = ["//visibility:public"],

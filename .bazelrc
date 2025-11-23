@@ -1,3 +1,4 @@
-build --cxxopt="-std=c++23"
+build --cxxopt="-std=c++2b"
 build --cxxopt="-Wall"
 build:debug --cxxopt="-g"
+build:macos --macos_minimum_os '11.0'

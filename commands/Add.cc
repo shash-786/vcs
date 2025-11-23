@@ -12,11 +12,67 @@ void Command::Add::filter_work_tree_files(worktree& w, std::span<const std::stri
 }
 
 bool excluded (const std::string& suspect, worktree& w) {
-
-    for (int i = 0; i < w.dr->nr; i++) {
+    /*
+    we are checking for every dir entry whether it matches any of the ignore rules
+    we use primarily the function fnmatch for matching the patterns
+    */
+    // TODO: make this function match the rule 'src/' with src
+    // currently it doesn't do that
+    for (int i = w.dr->nr - 1; i >= 0; i--) {
         const directory_ignore_ruleset::entry& entry = w.dr->rules[i] ;
         const std::string& pattern = entry.rule ;
         const std::string& base = entry.base ;
+        int it = 0 ;
+        bool to_exclude = true ;
+
+        // If a rule starts with '!'
+        // That means it is **TO BE INCLUDED**
+        if (pattern[0] == '!') {
+            to_exclude = false ;
+            ++it ;
+        }
+
+        auto pos = pattern.find('/', it) ;
+        if (pos == std::string::npos) {
+            // The exclude rule does not contain any '/'
+            // this means it is a simple rule either regex based or name based
+            pos = suspect.rfind('/') ;
+            const char* ptr = pos == std::string::npos ? suspect.c_str() : suspect.c_str() + pos + 1 ;
+            if (fnmatch(pattern.c_str() + it, ptr, 0) == 0) {
+                return to_exclude ;
+            }
+
+        } else {
+
+            if (pattern[it] == '/') {
+                ++it ;
+            }
+            // case where suspect = 'a'
+            // and we are reading rules of src/ directory so base will be 'src/' rule could be '/api'
+            if (suspect.size() < base.size())
+                continue ;
+
+            // case where suspect = 'api/main.cc'
+            // and our rule is base = 'src/' rule = 'main.cc'
+            // this will check whether position 3 in suspect is '/'
+            if (base.size() && suspect[base.size() - 1] != '/')
+                continue ;
+            
+            // this will match the suspect = 'api/' and base = 'src/'
+            if (suspect.compare(0, base.size(), base) != 0) 
+                continue ;
+            
+            // finally do a match of the pattern
+            // let's say pattern is '*.cc' and base is 'src/'
+            // suspect is 'src/main.cc' we will compare
+            // fnmatch('*.cc' , "main.cc", FNM_PATHNAME)
+            // FNM_PATHNAME --> this flag is short for not greedy
+            // without it '*.txt' will match both 'f.txt' and 'a/h.txt'
+            // "*.cpp"	"src/main.cpp"	FNM_NOMATCH 
+            if (fnmatch(pattern.c_str() + it, suspect.c_str() + base.size(), FNM_PATHNAME) == 0) {
+                return to_exclude ;
+            }
+        }
     }
     return false ;
 }
@@ -39,6 +95,8 @@ int Command::Add::_read_work_tree_recursive(worktree& w, const std::string& path
         while ((d = readdir(dir)) != nullptr) {
 
             auto type = d->d_type ;
+            // Sometimes the d_type field can be DT_UNKNOWN, especially on certain filesystems.
+            // Check using the lstat sys call to get the conecrete type
             if (type == DT_UNKNOWN) {
                 struct stat st ;
                 if (lstat(fullname.c_str(), &st) == 0) {
@@ -48,10 +106,17 @@ int Command::Add::_read_work_tree_recursive(worktree& w, const std::string& path
                 }
             }
             
+            // Check whether the current entry is "." or ".." or ".git" if yes then skip it
             if (d->d_name[0] == '.' && (d->d_name[1] == '\0' || (d->d_name[1] == '.' && d->d_name[2] == '\0') || strcmp(d->d_name, ".git") == 0) ) {
                 continue ;
             }
 
+            // After every iteration we resize to the base length size
+            // this is because we are reusing the same buffer
+            // So for example if base is "src/"
+            // first entry would be main.cc so fullname = "src/main.cc"
+            // next entry is utils/ so we need to rewind back to "src/" and then
+            // append "utils/" to it to make "src/utils/"
             fullname.resize(baselen) ;
             fullname.append(d->d_name) ;
             int de_name_len = strlen(d->d_name) ;
@@ -85,6 +150,10 @@ int Command::Add::_read_work_tree_recursive(worktree& w, const std::string& path
             }
             dir_add_entry(w, fullname, de_name_len) ;
         }
+        // For every directory we read we need to pop the excludes we pushed
+        // This is to ensure if we are inside the folder src/ we need to pop
+        // rules of src/ because we don't want them to affect the parent directory or any
+        // other directory in parent
         pop_excludes(w, excludes) ;
     }
     closedir(dir) ;

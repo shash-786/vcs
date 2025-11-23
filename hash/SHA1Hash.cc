@@ -3,6 +3,7 @@
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 
 #define CHUNK 0x200000

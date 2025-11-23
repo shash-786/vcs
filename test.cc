@@ -65,6 +65,7 @@ int read_work_tree_recursive(const std::string& path, const std::string& base) {
             
             // 4. Append current file name
             fullname.append(d->d_name);
+            std::cout << fullname << std::endl ;
             
             int de_name_len = strlen(d->d_name);
 
@@ -96,7 +97,7 @@ int read_work_tree_recursive(const std::string& path, const std::string& base) {
             }
 
             // Add the file to the list
-            dir_add_entry(fullname, de_name_len);
+            // dir_add_entry(fullname, de_name_len);
         }
         
         // Unload .gitignore rules
