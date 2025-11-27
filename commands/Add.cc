@@ -1,17 +1,73 @@
 #include "Add.h"
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <dirent.h>
 #include <string.h>
 #include <fnmatch.h>
 #include <sys/stat.h>
 
-void Command::Add::filter_work_tree_files(worktree& w, std::span<const std::string> args) 
-{
+bool Command::Add::match (const std::string& to_match, const std::string& with, std::vector<bool>& seen, int i) {
+    // Case where arg is '.' so arg will be ''
+    if (!to_match.size())
+        return seen[i] = true ;
     
+    if (with.compare(0, to_match.size(), to_match)) {
+        // meaning `with` is not matching upto arg
+        // case could be `arg` = 'README' with = 'EMDAER'
+        // or `arg` = 'src/main.cc' `with` = 'src/main.py'
+        // or `arg` = '*.cc' with = 'main.cc'
+        if (fnmatch(to_match.c_str(), with.c_str(), 0) == 0) {
+            return seen[i] = true ;
+        } else {
+            return false ;
+        }
+    }
+
+    /*
+    This would cover both the cases where the 
+    2 suspects are exactly equal and the one case
+    where arg = 'src' and the with = 'src/main.cc'
+
+    So recursive and equal are being matched here
+    
+    but wait this would also return true
+    for `arg` = 'src' and with = 'src_backup'
+    */
+    if (to_match.size() == with.size())
+        return seen[i] = true ;
+    // if `arg` = 'src/' or if `arg` = 'src and with = 'src/main.cc'
+    if (to_match.back() == '/' || with[to_match.size()] == '/') 
+        return seen[i] = true ;
+    return false ;
 }
 
-bool excluded (const std::string& suspect, worktree& w) {
+void Command::Add::filter_work_tree_files(worktree& w, std::span<const std::string> args) 
+{
+    int n = args.size() ;
+    std::vector<bool> seen(n, 0) ;
+
+    int dst = 0 ;
+
+    for (int src = 0; src < w.files.size(); src++) {
+        for (int i = 0; i < args.size(); i++) {
+            if (match(args[i], w.files[src].name, seen, i)) {
+                std::cout << "matched " << args[i] << " with " << w.files[src].name << std::endl ;
+                w.files[dst++] = std::move(w.files[src]) ;
+            }
+        }
+    }
+    w.files.resize(dst) ;
+
+    for (int i = 0; i < args.size(); i++) {
+        if (!seen[i]) {
+            fprintf(stderr, "%s did not match any pathspec", args[i].c_str()) ;
+            exit(1) ;
+        }
+    }
+}
+
+bool Command::Add::excluded (const std::string& suspect, worktree& w) {
     /*
     we are checking for every dir entry whether it matches any of the ignore rules
     we use primarily the function fnmatch for matching the patterns
@@ -77,7 +133,7 @@ bool excluded (const std::string& suspect, worktree& w) {
     return false ;
 }
 
-void dir_add_entry (worktree& w, std::string& name, int len) {
+void Command::Add::dir_add_entry (worktree& w, std::string& name, int len) {
     worktree_entry new_entry ;
     new_entry.name = name ;
     w.files.push_back(std::move(new_entry)) ;
@@ -162,12 +218,15 @@ int Command::Add::_read_work_tree_recursive(worktree& w, const std::string& path
 
 void Command::Add::pop_excludes(worktree& w, int to_pop) {
     std::vector<directory_ignore_ruleset::entry>& rules = w.dr->rules ;
-    while (--to_pop) {
+    while (to_pop > 0) {
         if (rules.empty()) {
             fprintf(stderr, "popping more than what was pushed") ;
             exit(1) ;
         }
         w.dr->rules.pop_back() ;
+        // missed decrementing the total rules
+        w.dr->nr-- ;
+        to_pop-- ;
     }
 }
 
