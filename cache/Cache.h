@@ -2,6 +2,12 @@
 #include <string>
 
 #define CACHE_SIGNATURE 0x44495243	/* "DIRC" */
+#define CE_NAMEMASK  (0x0fff)
+#define CE_VALID     (0x8000)
+#define ce_namelen(ce) (CE_NAMEMASK & ntohs((ce)->ce_flags))
+#define cache_entry_size(len) ((offsetof(struct cache_entry,name) + (len) + 8) & ~7)
+#define ce_size(ce) cache_entry_size(ce_namelen(ce))
+
 struct cache_header {
 	uint32_t hdr_signature ;
 	uint32_t hdr_version ;
@@ -24,5 +30,7 @@ struct cache_entry {
 	uint32_t ce_size ;
 	uint8_t sha1[20] ;
 	uint16_t ce_flags ;
-	std::string name ; 
+	// We had initially using std::string for this
+	char name[0]; 
 } ;
+
