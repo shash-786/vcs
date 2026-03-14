@@ -1,6 +1,6 @@
 #include "Repository.h"
 
-Repo::Repository& Repo::Repository::getInstance(){
+[[nodiscard]]Repo::Repository& Repo::Repository::getInstance(){
     static Repo::Repository r ;
     return r ;
 }

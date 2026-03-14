@@ -14,9 +14,9 @@ namespace Object
     } ;
 
     static const std::unordered_map<type, std::string> enum_to_str = {
-        {OBJECT_BLOB, "blob" }, 
-        {OBJECT_COMMIT, "commit" }, 
-        {OBJECT_TREE, "tree" }, 
+        {type::OBJECT_BLOB, "blob" }, 
+        {type::OBJECT_COMMIT, "commit" }, 
+        {type::OBJECT_TREE, "tree" }, 
     } ;
 
     class GitObject

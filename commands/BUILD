@@ -20,3 +20,33 @@ cc_library (
     ], 
     visibility = ["//visibility:public"],
 )
+
+cc_library (
+    name = "worktree",
+    hdrs = ["WorkTree.h"],
+    visibility = ["//visibility:private"],
+)
+
+cc_library (
+    name = "add",
+    hdrs = ["Add.h"],
+    srcs = ["Add.cc"],
+    deps = [
+        ":command_interface",
+        "//fs:fsmanager",
+        ":worktree"
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "add_test",
+    srcs = ["AddTest.cc"],
+    deps = [
+        ":add",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "//core/repo:repo",
+        "//fs:fsmanager"
+    ],
+)

@@ -6,8 +6,8 @@ namespace Object
     class Blob: public Object::GitObject 
     {
         std::string m_hash ;
-        size_t m_size ;
         std::vector<uint8_t> m_data ;
+        size_t m_size ;
         const Object::type m_type = Object::type::OBJECT_BLOB ;
 
         public:

@@ -49,8 +49,8 @@ void Command::Add::filter_work_tree_files(worktree& w, std::span<const std::stri
 
     int dst = 0 ;
 
-    for (int src = 0; src < w.files.size(); src++) {
-        for (int i = 0; i < args.size(); i++) {
+    for (size_t src = 0; src < w.files.size(); src++) {
+        for (size_t i = 0; i < args.size(); i++) {
             if (match(args[i], w.files[src].name, seen, i)) {
                 std::cout << "matched " << args[i] << " with " << w.files[src].name << std::endl ;
                 w.files[dst++] = std::move(w.files[src]) ;
@@ -59,7 +59,7 @@ void Command::Add::filter_work_tree_files(worktree& w, std::span<const std::stri
     }
     w.files.resize(dst) ;
 
-    for (int i = 0; i < args.size(); i++) {
+    for (size_t i = 0; i < args.size(); i++) {
         if (!seen[i]) {
             fprintf(stderr, "%s did not match any pathspec", args[i].c_str()) ;
             exit(1) ;
@@ -309,12 +309,12 @@ void Command::Add::read_work_tree(worktree& w, const std::string& path, const st
 std::string Command::Add::find_common_root(std::span<const std::string> args) 
 {
     std::string first = args[0] ;
-    int pos = 0 ;
+    size_t pos = 0 ;
     if ((pos = first.rfind('/')) == std::string::npos) {
         return "" ;
     }
 
-    for (int i = 1; i < args.size() ; i++) {
+    for (size_t i = 1; i < args.size() ; i++) {
 
         // if pos is 6 that means the current prefix length is 7
         // if the size of the string you are comparing is less that 7
@@ -354,6 +354,7 @@ std::string Command::Add::_resolve(std::string& path) {
     std::string new_path = "" ;
     int prefixLen = prefix.size() ;
     int len = path.size() , i = 0 ;
+    // std::cout << "Prefix is " << prefix << " and len is " << prefixLen << std::endl ;
 
     while (i < len) {
         // to cover both case ./ and ../
@@ -407,14 +408,15 @@ std::string Command::Add::_resolve(std::string& path) {
         } while (prefixLen && prefix[prefixLen - 1] != '/') ;
     }
 
-    new_path.append(prefix, prefixLen) ;
-    new_path.append(path, len - i) ;
+    new_path.append(prefix, 0, prefixLen) ;
+    if (i < len)
+        new_path.append(path, i) ;
     return new_path ;
 }
 
 void Command::Add::resolve_paths(std::vector<std::string>& paths)
 {
-    for (int i = 0; i < paths.size(); i++) {
+    for (size_t i = 0; i < paths.size(); i++) {
         paths[i] = _resolve(paths[i]) ;
     }
 }

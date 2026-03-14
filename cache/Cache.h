@@ -34,3 +34,4 @@ struct cache_entry {
 	char name[0]; 
 } ;
 
+using cache_entry_ptr = std::unique_ptr<cache_entry, void(*)(void*)> ;

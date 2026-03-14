@@ -6,8 +6,8 @@ cc_library(
         "GitObject.h",
     ],
     deps = [
-        "//common:errors",
-        "//hash:sha1_hash",
+        "//common:common",
+        "//hash:sha1",
     ],
 )
 
